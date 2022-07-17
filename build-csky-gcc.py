@@ -159,12 +159,12 @@ def get_target_name(options):
 	name = "csky-%s%s" % (options.tos, options.abi)
 	if options.abi == "abiv1":
 		name = "csky-%s" % options.tos
-        if options.tos == "linux":
-            if options.libc == "glibc":
-                libc = "gnu"
-            else:
-                libc = "uclibc"
-            name = "csky-%s-%s%s" % (options.tos, libc, options.abi)
+		if options.tos == "linux":
+			if options.libc == "glibc":
+				libc = "gnu"
+			else:
+				libc = "uclibc"
+			name = "csky-%s-%s%s" % (options.tos, libc, options.abi)
 	return name
 
 def get_old_target_name(options):
@@ -325,7 +325,7 @@ def build_is_finished(options, target, real = False):
 def build_binutils(options, argv):
 	cmd = build_cmd(options, "rm -rf ./* && %s/configure", options.binutils_src)
 	cmd += build_cmd(options, "%s", platform.machine())
-        cmd += build_cmd(options, "--target=%s", (get_target_name(options)))
+	cmd += build_cmd(options, "--target=%s", (get_target_name(options)))
 	cmd += build_cmd(options, "%s", component["binutils"]["append"])
 	cmd += build_cmd(options, "--prefix=%s/", options.prefix)
 	cmd += build_cmd(options, "&& make && make install")
@@ -367,7 +367,7 @@ def build_gcc(options, argv):
 
 def build_gcc_base(options):
 	cmd = build_cmd(options, "rm -rf ./* && %s/configure", options.gcc_src)
-        cmd += build_cmd(options, "--target=%s", (get_target_name(options)))
+	cmd += build_cmd(options, "--target=%s", (get_target_name(options)))
 	cmd += build_cmd(options, "%s", component["gcc"]["append"])
 	cmd += build_cmd(options, "--prefix=%s/", options.prefix)
 
@@ -420,8 +420,8 @@ def build_gcc_tos(options, mm, tos, stage = 0):
 			component[mm]["append"] += "--with-build-time-tools=%s/bin " % options.prefix
 		if not stage:
 			cmd = "cd %s " % options.prefix
-   			cmd += '&& find . -name crtn.o -print -exec rm -rf {} \; '
-   			cmd += '&& find . -name crti.o -print -exec rm -rf {} \; '
+			cmd += '&& find . -name crtn.o -print -exec rm -rf {} \; '
+			cmd += '&& find . -name crti.o -print -exec rm -rf {} \; '
 			component[mm]["cmd_post"] = cmd
 
 def build_gcc_compatibility(options, component_chain):
@@ -738,10 +738,10 @@ def build_uclibc(options, argv):
 	cmd_exec_with_checkerr(options, cmd)
 
 	install = "%s/%s/libc/" % (options.prefix, get_target_name(options))
-   	cmd = "cd %s && mv usr/include tmpinclude " % install
-   	cmd += '&& for i in `find . -name "include"` ; do\nrm -rf $i\ndone '
-   	cmd += '&& mv tmpinclude usr/include '
-   	cmd_exec_with_checkerr(options, cmd)
+	cmd = "cd %s && mv usr/include tmpinclude " % install
+	cmd += '&& for i in `find . -name "include"` ; do\nrm -rf $i\ndone '
+	cmd += '&& mv tmpinclude usr/include '
+	cmd_exec_with_checkerr(options, cmd)
 
 def build_uclibc_ng(options, argv):
 	cmd = "rm -rf ./* && cp -af %s/* ." % options.uclibc_ng_src
@@ -855,14 +855,14 @@ def build_glibc(options, argv):
 
 	# cp crt1.o to crt0.o
 	cmd = "cd %s " % options.prefix
-   	cmd += '&& for i in `find . -name "crt1.o"` ; do\ncp $i `echo ${i} | sed \'s/crt1/crt0/\'`\ndone '
-   	cmd_exec_with_checkerr(options, cmd)
+	cmd += '&& for i in `find . -name "crt1.o"` ; do\ncp $i `echo ${i} | sed \'s/crt1/crt0/\'`\ndone '
+	cmd_exec_with_checkerr(options, cmd)
 
-   	install = "%s/%s/libc/" % (options.prefix, get_target_name(options))
-   	cmd = "cd %s && mv usr/include tmpinclude " % install
-   	cmd += '&& for i in `find . -name "include"` ; do\nrm -rf $i\ndone '
-   	cmd += '&& mv tmpinclude usr/include '
-   	cmd_exec_with_checkerr(options, cmd)
+	install = "%s/%s/libc/" % (options.prefix, get_target_name(options))
+	cmd = "cd %s && mv usr/include tmpinclude " % install
+	cmd += '&& for i in `find . -name "include"` ; do\nrm -rf $i\ndone '
+	cmd += '&& mv tmpinclude usr/include '
+	cmd_exec_with_checkerr(options, cmd)
 
 def get_component_chain(options, mm):
 	(m, stage) = get_component(options, mm)
@@ -979,13 +979,17 @@ def build_toolchain_env(options, mm):
 		opt = s[1:]
 		cmd = ""
 
+		if url.startswith("https://"):
+			cmd = build_cmd(options, "git clone %s %s", (url, source_dirname + "/" + m))
+			cmd += build_cmd(options, "%s", " ".join(opt))
+
 		if url.startswith("ssh://"):
 			if url.startswith("ssh://@"): url = url.replace("@", options.user + "@")
 
 			cmd = build_cmd(options, "git clone %s %s", (url, source_dirname + "/" + m))
 			cmd += build_cmd(options, "%s", " ".join(opt))
 
-                if url.startswith("git@"):
+		if url.startswith("git@"):
 			cmd = build_cmd(options, "git clone %s %s", (url, source_dirname + "/" + m))
 			cmd += build_cmd(options, "%s", " ".join(opt))
 
@@ -1242,14 +1246,14 @@ profile = {
 }
 
 component = {
-        "binutils"	: { "url"		: "git@github.com:c-sky/binutils-gdb.git",
+        "binutils"	: { "url"		: "https://github.com/c-sky/binutils-gdb.git",
 					"debug" 	: 'CFLAGS="-g -O0" CXXFLAGS="-g -O0"',
 					"default" 	: '--disable-gdb --disable-werror',
 					"worker" 	: [(build_binutils, "")],
 					"tos" 		: {"linux" : "--with-sysroot=yes"},
 				  },
 
-        "gcc"		: { "url"		: "git@github.com:c-sky/gcc.git",
+        "gcc"		: { "url"		:  "https://github.com/c-sky/gcc.git",
 					"debug" 	: 'CFLAGS="-g -O0" CXXFLAGS="-g -O0"',
 					"worker" 	: [(build_gcc_initial, "binutils"), (build_gcc, "--libc")],
 					"bos" 		: build_gcc_bos,
@@ -1263,7 +1267,7 @@ component = {
 								: build_gcc_compatibility,
 				  },
 
-        "minilibc"	: { "url"		: "git@github.com:c-sky/toolchain-build.git",
+        "minilibc"	: { "url"		: "https://github.com/c-sky/toolchain-build.git",
 					"worker" 	: [(build_minilibc, "gcc.0")],
 				  },
 
@@ -1274,12 +1278,12 @@ component = {
 					"multilib"	: ["MULTILIB_OPTIONS=mpic"]
 				  },
 
-        "uclibc-ng"	: { "url"		: "git@github.com:c-sky/uclibc-ng.git, --depth=1",
+        "uclibc-ng"	: { "url"		: "https://github.com/c-sky/uclibc-ng.git, --depth=1",
 					"worker" 	: [(build_uclibc_ng, "linux-libc-headers, gcc.0")],
 					"multilib"	: ["MULTILIB_OPTIONS=mpic"]
 				  },
 
-        "glibc"		: { "url"		: "git@github.com:c-sky/glibc.git",
+        "glibc"		: { "url"		: "https://github.com/c-sky/glibc.git",
 					"worker" 	: [(build_glibc, "linux-libc-headers, gcc.0")],
 					"multilib"	: ["MULTILIB_OPTIONS=mpic/mno-pic"],
 					"compatibility"
@@ -1288,7 +1292,7 @@ component = {
 
 	"linux-libc-headers"		:
 				  {
-                                      "url"		: "git@github.com:c-sky/linux-4.9.y.git, --depth=1",
+                                      "url"		: "https://github.com/c-sky/linux-4.9.y.git, --depth=1",
 				  	"worker" 	: [(build_linux_libc_headers, "")],
 				  	"comment"	: "this is dir of linux kernel source code as default because the headers are geted from that :) \
 				  				  also you can set pure linux include dir like '--linux-libc-headers-src=$(your/include/../path),type=inc' \
@@ -1296,7 +1300,7 @@ component = {
 				  },
 	"gdb"	:
 		{
-			"url"	: "git@github.com:c-sky/binutils-gdb.git,  --branch=gdb-7.12-branch-csky",
+			"url"	:  "https://github.com/c-sky/binutils-gdb.git,  --branch=gdb-7.12-branch-csky",
 			"default" 	: '--disable-ld --disable-gas --disable-binutils --disable-gold --disable-gprof --without-auto-load-safe-path --with-python=no --disable-sim --enable-install-libbfd',
 			"worker" 	: [(build_gdb, "")],
 		},
